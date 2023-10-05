@@ -1,12 +1,12 @@
 [project]
-name = "standard-code-quality-workflow"
+name = "ev-price-tracker-scraper"
 version = "0.0.1"
-description = "Current standardized code quality workflow for Python with example file."
+description = "EV Price Tracker scraper to run at a daily frequency"
 authors = [
     { name = "Issac Loo", email = "issaloo@umich.edu" },
 ]
 
-requires-python = ">=3.9,<3.11"
+requires-python = ">=3.9,<3.12"
 license = { text = "All Rights Reserved" }
 dependencies = [
     "scrapy>=2.11.0",
