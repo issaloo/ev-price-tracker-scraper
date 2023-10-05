@@ -9,7 +9,8 @@ authors = [
 requires-python = ">=3.9,<3.11"
 license = { text = "All Rights Reserved" }
 dependencies = [
-    "pandas>=1.5.3",
+    "scrapy>=2.11.0",
+    "lxml>=4.9.3",
 ]
 
 [project.optional-dependencies]
