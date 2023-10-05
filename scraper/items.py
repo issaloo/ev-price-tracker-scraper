@@ -4,9 +4,9 @@
 # https://docs.scrapy.org/en/latest/topics/items.html
 
 import scrapy
+from dataclasses import dataclass
 
-
-class ScraperItem(scrapy.Item):
+class VehicleItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
     pass
