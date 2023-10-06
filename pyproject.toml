@@ -45,6 +45,7 @@ ignore = [
     "C901", # complex-structure
     "D100", # undocumented-public-module
     "D104", # undocumented-public-package
+    "D205", # blank-line-after-summary
     "D211", # blank-line-before-class
     "D212", # multi-line-summary-first-line
     "D213", # multi-line-summary-second-line
