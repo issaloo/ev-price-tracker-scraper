@@ -1,12 +1,10 @@
-# Define here the models for your scraped items
-#
-# See documentation in:
-# https://docs.scrapy.org/en/latest/topics/items.html
+from scrapy.item import Item, Field
+from datetime import datetime
 
-import scrapy
-from dataclasses import dataclass
 
-class VehicleItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+class EvItem(Item):
+    brand_name = Field()
+    model_name = Field()
+    image_src = Field()
+    msrp = Field()
+    timestamp = Field()
