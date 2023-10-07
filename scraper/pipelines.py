@@ -113,7 +113,7 @@ class InsertDataPipeline:
         self.cur.execute(check_query)
         record_count = self.cur.fetchone()
 
-        # If table is not empty
+        # TODO: If table is not empty
         if record_count > 0:
             # Check to see if msrp changed
             check_fields = ["brand_name", "model_name"]
@@ -123,14 +123,10 @@ class InsertDataPipeline:
             last_msrp = self.cur.fetchone()
             if last_msrp == adapter.get("msrp"):
                 spider.logger.warn("MSRP did not change for item.")
-            else:
-                insert_dict = adapter.asdict()
-                insert_query = self.read_sql_file("sql/insert_evprice_new_msrp.sql", insert_dict)
-                self.cur.execute(insert_query)
-        else:  # TODO: dont repeat this code below
-            insert_dict = adapter.asdict()
-            insert_query = self.read_sql_file("sql/insert_evprice_new_msrp.sql", insert_dict)
-            self.cur.execute(insert_query)
+                return None
+        insert_dict = adapter.asdict()
+        insert_query = self.read_sql_file("sql/insert_evprice_new_msrp.sql", insert_dict)
+        self.cur.execute(insert_query)
 
     def replace_query_params(self, query: str, params: dict):
         for key, value in params.items():
@@ -142,5 +138,4 @@ class InsertDataPipeline:
             query = f.read()
         if params:
             return self.replace_query_params(query, params)
-        else:
-            return query
+        return query
