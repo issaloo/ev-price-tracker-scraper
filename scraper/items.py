@@ -22,4 +22,4 @@ class EvItem(Item):
     car_type = Field()
     image_src = Field()
     msrp = Field()
-    timestamp = Field()
+    create_timestamp = Field()

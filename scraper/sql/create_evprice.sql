@@ -3,6 +3,6 @@ CREATE TABLE IF NOT EXISTS ev_price (
     brand_name VARCHAR(50) NOT NULL, 
     model_name VARCHAR(50) NOT NULL, 
     car_type VARCHAR(50) NOT NULL, 
-    image_src VARCHAR(50) NOT NULL, 
+    image_src VARCHAR(255) NOT NULL, 
     msrp float(24) NOT NULL, 
-    create_timestamp TIMESTAMPTZ NOT NULL);
+    create_timestamp TIMESTAMPTZ NOT NULL)

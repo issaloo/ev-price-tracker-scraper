@@ -12,6 +12,8 @@ dependencies = [
     "scrapy>=2.11.0",
     "lxml>=4.9.3",
     "psycopg2>=2.9.9",
+    "google-cloud>=0.34.0",
+    "google-cloud-secret-manager>=2.16.4",
 ]
 
 [project.optional-dependencies]
