@@ -86,7 +86,6 @@ class CleanDataPipeline:
         for field in float_fields:
             adapter[field] = float(adapter[field])
 
-        # Lowercase string values
         str_lc_fields = ["brand_name", "model_name", "car_type"]
         for field in str_lc_fields:
             adapter[field] = adapter[field].lower()
@@ -98,51 +97,15 @@ class InsertDataPipeline:
     """Insert msrp data into table."""
     
     def __init__(self):
-        hostname = "evpricetrackerdb.internal"
-        username = "postgres"
-        password = ""  # TODO: do not save here
-        database = "ev_price"
-
-        self.connection = psycopg2.connect(host=hostname, user=username, password=password, dbname=database)
+        self.hostname = "evpricetrackerdb.internal"
+        self.username = "postgres"
+        self.password = ""  # TODO: do not save here
+        self.database = "ev_price"
+        self.connection = psycopg2.connect(host=self.hostname, 
+                                           user=self.username, 
+                                           password=self.password, 
+                                           dbname=self.database)
         self.cur = self.connection.cursor()
-
-        create_query = self.read_sql_file("sql/create_evprice.sql")
-        self.cur.execute(create_query)
-
-    def process_item(self, item, spider):
-        """
-        Process an item to insert msrp data into table.
-
-        Args:
-        ----
-            item (scrapy.Item): The item to be processed.
-            spider (scrapy.Spider): The spider that generated the item.
-
-        Returns:
-        -------
-            scrapy.Item: The processed item if all required fields are present.
-        """
-        adapter = ItemAdapter(item)
-
-        check_query = self.read_sql_file("sql/check_evprice_empty.sql")
-        self.cur.execute(check_query)
-        record_count = self.cur.fetchone()
-
-        # if table is not empty, check if msrp changed
-        if record_count > 0:
-            check_fields = ["brand_name", "model_name"]
-            check_dict = {field: adapter.get(field) for field in check_fields}
-            check_query = self.read_sql_file("sql/check_evprice_last_msrp.sql", check_dict)
-            self.cur.execute(check_query)
-            last_msrp = self.cur.fetchone()
-            if last_msrp == adapter.get("msrp"):
-                spider.logger.warn("MSRP did not change for item.")
-                return None
-
-        # otherwise, insert data into table
-        insert_dict = adapter.asdict()
-        insert_query = self.read_sql_file("sql/insert_evprice_new_msrp.sql", insert_dict)
-        self.cur.execute(insert_query)
 
     def replace_query_params(self, query: str, params: dict):
         """Replace query with parameters."""
@@ -157,3 +120,43 @@ class InsertDataPipeline:
         if params:
             return self.replace_query_params(query, params)
         return query
+
+    def process_item(self, item, spider):
+        """
+        Process an item to insert msrp data into table.
+
+        Args:
+        ----
+            item (scrapy.Item): The item to be processed.
+            spider (scrapy.Spider): The spider that generated the item.
+
+        Returns:
+        -------
+            scrapy.Item: The processed item if all required fields are present.
+        """
+        # create table if not exists
+        create_query = self.read_sql_file("sql/create_evprice.sql")
+        self.cur.execute(create_query)
+
+        adapter = ItemAdapter(item)
+
+        # check table is empty
+        check_query = self.read_sql_file("sql/check_evprice_empty.sql")
+        self.cur.execute(check_query)
+        record_count = self.cur.fetchone()
+
+        # check if msrp changed
+        if record_count > 0:
+            check_fields = ["brand_name", "model_name"]
+            check_dict = {field: adapter.get(field) for field in check_fields}
+            check_query = self.read_sql_file("sql/check_evprice_last_msrp.sql", check_dict)
+            self.cur.execute(check_query)
+            last_msrp = self.cur.fetchone()
+            if last_msrp == adapter.get("msrp"):
+                spider.logger.warn("MSRP did not change for item.")
+                return None
+
+        # insert data into table
+        insert_dict = adapter.asdict()
+        insert_query = self.read_sql_file("sql/insert_evprice_new_msrp.sql", insert_dict)
+        self.cur.execute(insert_query)
