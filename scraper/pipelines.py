@@ -1,6 +1,7 @@
 import hashlib
 from datetime import date
 
+import psycopg2
 from itemadapter import ItemAdapter
 from scrapy.exceptions import DropItem
 
@@ -88,5 +89,58 @@ class CleanDataPipeline:
         # Lowercase string values
         str_lc_fields = ["brand_name", "model_name", "car_type"]
         for field in str_lc_fields:
-            adapter[field]
+            adapter[field] = adapter[field].lower()
         return item
+
+
+class InsertDataPipeline:
+    def __init__(self):
+        hostname = "evpricetrackerdb.internal"
+        username = "postgres"
+        password = ""  # TODO: do not save here
+        database = "ev_price"
+
+        self.connection = psycopg2.connect(host=hostname, user=username, password=password, dbname=database)
+        self.cur = self.connection.cursor()
+
+        create_query = self.read_sql_file("sql/create_evprice.sql")
+        self.cur.execute(create_query)
+
+    def process_item(self, item, spider):
+        adapter = ItemAdapter(item)
+
+        check_query = self.read_sql_file("sql/check_evprice_empty.sql")
+        self.cur.execute(check_query)
+        record_count = self.cur.fetchone()
+
+        # If table is not empty
+        if record_count > 0:
+            # Check to see if msrp changed
+            check_fields = ["brand_name", "model_name"]
+            check_dict = {field: adapter.get(field) for field in check_fields}
+            check_query = self.read_sql_file("sql/check_evprice_last_msrp.sql", check_dict)
+            self.cur.execute(check_query)
+            last_msrp = self.cur.fetchone()
+            if last_msrp == adapter.get("msrp"):
+                spider.logger.warn("MSRP did not change for item.")
+            else:
+                insert_dict = adapter.asdict()
+                insert_query = self.read_sql_file("sql/insert_evprice_new_msrp.sql", insert_dict)
+                self.cur.execute(insert_query)
+        else:  # TODO: dont repeat this code below
+            insert_dict = adapter.asdict()
+            insert_query = self.read_sql_file("sql/insert_evprice_new_msrp.sql", insert_dict)
+            self.cur.execute(insert_query)
+
+    def replace_query_params(self, query: str, params: dict):
+        for key, value in params.items():
+            query = query.replace(f"$${key}$$", value)
+        return query
+
+    def read_sql_file(self, query_file_path: str, params: dict | None = None):
+        with open(query_file_path, "r") as f:
+            query = f.read()
+        if params:
+            return self.replace_query_params(query, params)
+        else:
+            return query

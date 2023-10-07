@@ -67,7 +67,7 @@ class TeslaSpider(scrapy.Spider):
         ev_item["car_type"] = car_type
         ev_item["msrp"] = self.extract_msrp(response)
         ev_item["image_src"] = self.extract_image_src(response, model_name)
-        ev_item["timestamp"] = datetime.now(timezone.utc).isoformat()
+        ev_item["create_timestamp"] = datetime.now(timezone.utc)
 
         yield ev_item
 
