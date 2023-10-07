@@ -1,4 +1,3 @@
--- Create initial ev_price table in postgres database
 CREATE TABLE IF NOT EXISTS ev_price (
     ev_id VARCHAR(32) PRIMARY KEY, 
     brand_name VARCHAR(50) NOT NULL, 

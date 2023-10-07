@@ -94,6 +94,9 @@ class CleanDataPipeline:
 
 
 class InsertDataPipeline:
+    
+    """Insert msrp data into table."""
+    
     def __init__(self):
         hostname = "evpricetrackerdb.internal"
         username = "postgres"
@@ -107,15 +110,26 @@ class InsertDataPipeline:
         self.cur.execute(create_query)
 
     def process_item(self, item, spider):
+        """
+        Process an item to insert msrp data into table.
+
+        Args:
+        ----
+            item (scrapy.Item): The item to be processed.
+            spider (scrapy.Spider): The spider that generated the item.
+
+        Returns:
+        -------
+            scrapy.Item: The processed item if all required fields are present.
+        """
         adapter = ItemAdapter(item)
 
         check_query = self.read_sql_file("sql/check_evprice_empty.sql")
         self.cur.execute(check_query)
         record_count = self.cur.fetchone()
 
-        # TODO: If table is not empty
+        # if table is not empty, check if msrp changed
         if record_count > 0:
-            # Check to see if msrp changed
             check_fields = ["brand_name", "model_name"]
             check_dict = {field: adapter.get(field) for field in check_fields}
             check_query = self.read_sql_file("sql/check_evprice_last_msrp.sql", check_dict)
@@ -124,16 +138,20 @@ class InsertDataPipeline:
             if last_msrp == adapter.get("msrp"):
                 spider.logger.warn("MSRP did not change for item.")
                 return None
+
+        # otherwise, insert data into table
         insert_dict = adapter.asdict()
         insert_query = self.read_sql_file("sql/insert_evprice_new_msrp.sql", insert_dict)
         self.cur.execute(insert_query)
 
     def replace_query_params(self, query: str, params: dict):
+        """Replace query with parameters."""
         for key, value in params.items():
             query = query.replace(f"$${key}$$", value)
         return query
 
     def read_sql_file(self, query_file_path: str, params: dict | None = None):
+        """Read sql from file path."""
         with open(query_file_path, "r") as f:
             query = f.read()
         if params:
