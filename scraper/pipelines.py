@@ -1,26 +1,45 @@
 import hashlib
+import os
 from datetime import date
 
 import psycopg2
 import scrapy
+from dotenv import load_dotenv
 from google.cloud import secretmanager
 from itemadapter import ItemAdapter
 from scrapy.exceptions import DropItem
 
+# TODO: update env
+load_dotenv()
 
-# TODO: install google cloud
-def access_secret_version(secret_id, version_id="latest"):
-    # Create the Secret Manager client.
-    client = secretmanager.SecretManagerServiceClient()
+HOSTNAME = os.getenv("DB_HOSTNAME")
+USERNAME = os.getenv("DB_USERNAME")
+DATABASE = os.getenv("DB_DATABASE")
+PORT = os.getenv("DB_PORT")
 
-    # Build the resource name of the secret version.
-    name = f"projects/{PROJECT_ID}/secrets/{secret_id}/versions/{version_id}"
+# TODO: Create the Secret Manager client.
+client = secretmanager.SecretManagerServiceClient()
+PASSWORD = client.access_secret_version(name=NAME).payload.data.decode("UTF-8")
 
-    # Access the secret version.
-    response = client.access_secret_version(name=name)
+HOST = f"postgres://{USERNAME}:{PASSWORD}@{HOSTNAME}:{PORT}/{DATABASE}?options"
 
-    # Return the decoded payload.
-    return response.payload.data.decode("UTF-8")
+
+PROJECT_ID = os.getenv("GCP_PROJECT_ID")
+SECRET_ID = os.getenv("GCP_SECRET_ID")
+VERSION_ID = os.getenv("GCP_VERSION_ID")
+NAME = f"projects/{PROJECT_ID}/secrets/{SECRET_ID}/versions/{VERSION_ID}"
+
+
+# TODO: UPDATE THIS
+connection = psycopg2.connect(
+    host=HOSTNAME,
+    user=USERNAME,
+    password=PASSWORD,
+    dbname=DATABASE,
+    port=PORT,
+)
+connection.autocommit = True
+cursor = connection.cursor()
 
 
 class DropMissingPipeline:
@@ -132,11 +151,6 @@ class InsertDataPipeline:
         self.password = ""  # TODO: do not save here
         self.database = "evpricetracker"
         self.port = 5432
-        self.connection = psycopg2.connect(
-            host=self.hostname, user=self.username, password=self.password, dbname=self.database, port=self.port
-        )
-        self.connection.autocommit = True
-        self.cursor = self.connection.cursor()
         self.base_sql_path = "scraper/sql"
 
     def read_sql_file(self, query_file_path: str, params: dict | None = None):
@@ -171,7 +185,7 @@ class InsertDataPipeline:
         """
         # create table if not exists
         create_query = self.read_sql_file(f"{self.base_sql_path}/create_evprice.sql")
-        self.cursor.execute(create_query)
+        cursor.execute(create_query)
 
         adapter = ItemAdapter(item)
 
@@ -179,14 +193,14 @@ class InsertDataPipeline:
         check_fields = ["brand_name", "model_name"]
         check_dict = {field: adapter.get(field) for field in check_fields}
         check_query = self.read_sql_file(f"{self.base_sql_path}/check_evprice_empty.sql", check_dict)
-        self.cursor.execute(check_query)
-        record_count = self.cursor.fetchone()[0]
+        cursor.execute(check_query)
+        record_count = cursor.fetchone()[0]
 
         # check if msrp changed
         if record_count > 0:
             check_query = self.read_sql_file(f"{self.base_sql_path}/check_evprice_last_msrp.sql", check_dict)
-            self.cursor.execute(check_query)
-            last_msrp = float(self.cursor.fetchone()[0])
+            cursor.execute(check_query)
+            last_msrp = float(cursor.fetchone()[0])
             if last_msrp == float(adapter.get("msrp")):
                 spider.logger.info("MSRP did not change for item.")
                 return None
@@ -194,4 +208,4 @@ class InsertDataPipeline:
         # insert data into table
         insert_dict = adapter.asdict()
         insert_query = self.read_sql_file(f"{self.base_sql_path}/insert_evprice_new_msrp.sql", insert_dict)
-        self.cursor.execute(insert_query)
+        cursor.execute(insert_query)
