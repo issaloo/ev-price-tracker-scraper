@@ -14,7 +14,7 @@ With latest_timestamp as (
 SELECT
     msrp
 FROM 
-    ev_price as ep INNER JOIN 
+    $$DB_PRICE_TABLE$$ as ep INNER JOIN 
     latest_timestamp as lt ON 
         ep.brand_name = lt.brand_name AND
         ep.model_name = lt.model_name AND 
