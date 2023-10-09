@@ -4,7 +4,7 @@ With latest_timestamp as (
         model_name,
         MAX(create_timestamp) AS latest_timestamp
     FROM
-        ev_price
+        $$DB_PRICE_TABLE$$
     WHERE 
         brand_name = '$$brand_name$$' AND
         model_name = '$$model_name$$'

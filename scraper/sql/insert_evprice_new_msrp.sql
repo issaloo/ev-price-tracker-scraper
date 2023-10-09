@@ -1,4 +1,4 @@
-INSERT INTO ev_price (
+INSERT INTO $$DB_PRICE_TABLE$$ (
     ev_id, 
     brand_name, 
     model_name, 

@@ -10,44 +10,57 @@ from google.oauth2 import service_account
 from itemadapter import ItemAdapter
 from scrapy.exceptions import DropItem
 
-credentials = service_account.Credentials.from_service_account_file(
-    "scraper/ev-price-tracker-4100e7053913.json",
-)
+################################
+# Set Up Environment Variables #
+################################
 
-# TODO: update env
 load_dotenv()
 
-HOSTNAME = os.getenv("DB_HOSTNAME")
-USERNAME = os.getenv("DB_USERNAME")
-DATABASE = os.getenv("DB_DATABASE")
-PORT = os.getenv("DB_PORT")
-PROJECT_ID = os.getenv("GCP_PROJECT_ID")
-SECRET_ID = os.getenv("GCP_SECRET_ID")
-VERSION_ID = os.getenv("GCP_VERSION_ID")
-NAME = f"projects/{PROJECT_ID}/secrets/{SECRET_ID}/versions/{VERSION_ID}"
+BASE_SQL_PATH = "scraper/sql"
+DB_HOSTNAME = os.getenv("DB_HOSTNAME")
+DB_USERNAME = os.getenv("DB_USERNAME")
+DB_DATABASE = os.getenv("DB_DATABASE")
+DB_PORT = os.getenv("DB_PORT")
+DB_PRICE_TABLE = os.getenv("DB_PRICE_TABLE")
+GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID")
+GCP_SECRET_ID = os.getenv("GCP_SECRET_ID")
+GCP_VERSION_ID = os.getenv("GCP_VERSION_ID")
 
-# TODO:
-client = secretmanager.SecretManagerServiceClient(credentials=credentials)
-PASSWORD = client.access_secret_version(request={"name": NAME})
-PASSWORD = PASSWORD.payload.data.decode("UTF-8")
+# Get PostgresSQL secret payload
+try:
+    SECRET_NAME = f"projects/{GCP_PROJECT_ID}/secrets/{GCP_SECRET_ID}/versions/{GCP_VERSION_ID}"
+    credentials = service_account.Credentials.from_service_account_file("scraper/ev-price-tracker-4100e7053913.json")
+    client = secretmanager.SecretManagerServiceClient(credentials=credentials)
+    response = client.access_secret_version(name=SECRET_NAME)
+    secret_payload = response.payload.data.decode("UTF-8")
+except Exception as e:
+    print(f"Error accessing secret: {e}")
 
-# TODO: UPDATE THIS
-connection = psycopg2.connect(
-    host=HOSTNAME,
-    user=USERNAME,
-    password=PASSWORD,
-    dbname=DATABASE,
-    port=PORT,
-)
-connection.autocommit = True
-cursor = connection.cursor()
+# Establish a connection to the PostgreSQL database
+try:
+    connection = psycopg2.connect(
+        host=DB_HOSTNAME,
+        user=DB_USERNAME,
+        password=secret_payload,
+        dbname=DB_DATABASE,
+        port=DB_PORT,
+    )
+    connection.autocommit = True
+    cursor = connection.cursor()
+except Exception as e:
+    print(f"Error connecting to the database: {e}")
+
+
+########################
+# Initialize Pipelines #
+########################
 
 
 class DropMissingPipeline:
 
     """Ensure no fields are missing."""
 
-    def process_item(self, item: scrapy.Item, spider: scrapy.spider):
+    def process_item(self, item: scrapy.Item, spider: scrapy.Spider):
         """
         Process an item to ensure no missing fields.
 
@@ -77,7 +90,7 @@ class CreateRecordIdPipeline:
 
     """Create unique record ID."""
 
-    def process_item(self, item: scrapy.Item, spider: scrapy.spider):
+    def process_item(self, item: scrapy.Item, spider: scrapy.Spider):
         """
         Process an item to create a unique record ID.
 
@@ -103,7 +116,7 @@ class CleanDataPipeline:
 
     """Clean and normalize data."""
 
-    def process_item(self, item: scrapy.Item, spider: scrapy.spider):
+    def process_item(self, item: scrapy.Item, spider: scrapy.Spider):
         """
         Process an item to clean data.
 
@@ -132,27 +145,6 @@ class CleanDataPipeline:
 class InsertDataPipeline:
 
     """Insert msrp data into table."""
-
-    def __init__(self):
-        """
-        Attributes
-        ----------
-            hostname (str): The hostname or IP address of the PostgreSQL server.
-            username (str): The username for connecting to the PostgreSQL database.
-            password (str): The password for connecting to the PostgreSQL database.
-            database (str): The name of the PostgreSQL database to connect to.
-            port (int): The port number to use for the database connection.
-            connection: A connection object to the PostgreSQL database.
-            cursor: A cursor object for executing SQL queries.
-            base_sql_path (str): The base path for SQL script files used in the EV Price Tracker (default: "scraper/sql").
-
-        """
-        self.hostname = "localhost"
-        self.username = "postgres"
-        self.password = ""  # TODO: do not save here
-        self.database = "evpricetracker"
-        self.port = 5432
-        self.base_sql_path = "scraper/sql"
 
     def read_sql_file(self, query_file_path: str, params: dict | None = None):
         """Read sql from file path.
@@ -185,7 +177,8 @@ class InsertDataPipeline:
             scrapy.Item: The processed item if all required fields are present.
         """
         # create table if not exists
-        create_query = self.read_sql_file(f"{self.base_sql_path}/create_evprice.sql")
+        create_dict = {"DB_PRICE_TABLE": DB_PRICE_TABLE}
+        create_query = self.read_sql_file(f"{BASE_SQL_PATH}/create_evprice.sql", create_dict)
         cursor.execute(create_query)
 
         adapter = ItemAdapter(item)
@@ -193,13 +186,14 @@ class InsertDataPipeline:
         # check if data available for specific brand name and model name
         check_fields = ["brand_name", "model_name"]
         check_dict = {field: adapter.get(field) for field in check_fields}
-        check_query = self.read_sql_file(f"{self.base_sql_path}/check_evprice_empty.sql", check_dict)
+        check_dict["DB_PRICE_TABLE"] = DB_PRICE_TABLE
+        check_query = self.read_sql_file(f"{BASE_SQL_PATH}/check_evprice_empty.sql", check_dict)
         cursor.execute(check_query)
         record_count = cursor.fetchone()[0]
 
         # check if msrp changed
         if record_count > 0:
-            check_query = self.read_sql_file(f"{self.base_sql_path}/check_evprice_last_msrp.sql", check_dict)
+            check_query = self.read_sql_file(f"{BASE_SQL_PATH}/check_evprice_last_msrp.sql", check_dict)
             cursor.execute(check_query)
             last_msrp = float(cursor.fetchone()[0])
             if last_msrp == float(adapter.get("msrp")):
@@ -208,5 +202,6 @@ class InsertDataPipeline:
 
         # insert data into table
         insert_dict = adapter.asdict()
-        insert_query = self.read_sql_file(f"{self.base_sql_path}/insert_evprice_new_msrp.sql", insert_dict)
+        insert_dict["DB_PRICE_TABLE"] = DB_PRICE_TABLE
+        insert_query = self.read_sql_file(f"{BASE_SQL_PATH}/insert_evprice_new_msrp.sql", insert_dict)
         cursor.execute(insert_query)

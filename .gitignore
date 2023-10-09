@@ -35,3 +35,6 @@ ipython_config.py
 .archive/*
 *.bak
 *.back
+
+# json
+*.json
