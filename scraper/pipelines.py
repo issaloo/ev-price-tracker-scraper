@@ -6,8 +6,13 @@ import psycopg2
 import scrapy
 from dotenv import load_dotenv
 from google.cloud import secretmanager
+from google.oauth2 import service_account
 from itemadapter import ItemAdapter
 from scrapy.exceptions import DropItem
+
+credentials = service_account.Credentials.from_service_account_file(
+    "scraper/ev-price-tracker-4100e7053913.json",
+)
 
 # TODO: update env
 load_dotenv()
@@ -16,19 +21,15 @@ HOSTNAME = os.getenv("DB_HOSTNAME")
 USERNAME = os.getenv("DB_USERNAME")
 DATABASE = os.getenv("DB_DATABASE")
 PORT = os.getenv("DB_PORT")
-
-# TODO: Create the Secret Manager client.
-client = secretmanager.SecretManagerServiceClient()
-PASSWORD = client.access_secret_version(name=NAME).payload.data.decode("UTF-8")
-
-HOST = f"postgres://{USERNAME}:{PASSWORD}@{HOSTNAME}:{PORT}/{DATABASE}?options"
-
-
 PROJECT_ID = os.getenv("GCP_PROJECT_ID")
 SECRET_ID = os.getenv("GCP_SECRET_ID")
 VERSION_ID = os.getenv("GCP_VERSION_ID")
 NAME = f"projects/{PROJECT_ID}/secrets/{SECRET_ID}/versions/{VERSION_ID}"
 
+# TODO:
+client = secretmanager.SecretManagerServiceClient(credentials=credentials)
+PASSWORD = client.access_secret_version(request={"name": NAME})
+PASSWORD = PASSWORD.payload.data.decode("UTF-8")
 
 # TODO: UPDATE THIS
 connection = psycopg2.connect(
