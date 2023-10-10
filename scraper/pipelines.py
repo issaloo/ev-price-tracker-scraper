@@ -25,13 +25,13 @@ DB_PRICE_TABLE = os.getenv("DB_PRICE_TABLE")
 GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID")
 GCP_SECRET_ID = os.getenv("GCP_SECRET_ID")
 GCP_VERSION_ID = os.getenv("GCP_VERSION_ID")
+SECRET_NAME = f"projects/{GCP_PROJECT_ID}/secrets/{GCP_SECRET_ID}/versions/{GCP_VERSION_ID}"
 
 # Get PostgresSQL secret payload
 try:
-    SECRET_NAME = f"projects/{GCP_PROJECT_ID}/secrets/{GCP_SECRET_ID}/versions/{GCP_VERSION_ID}"
     credentials = service_account.Credentials.from_service_account_file("scraper/ev-price-tracker-4100e7053913.json")
     client = secretmanager.SecretManagerServiceClient(credentials=credentials)
-    response = client.access_secret_version(name=SECRET_NAME)
+    response = client.access_secret_version(request={"name": SECRET_NAME})
     secret_payload = response.payload.data.decode("UTF-8")
 except Exception as e:
     print(f"Error accessing secret: {e}")
