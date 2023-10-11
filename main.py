@@ -15,7 +15,7 @@ def run_ev_price_spider(event, context):
 
             settings.setdict(
                 {
-                    "LOG_LEVEL": "INFO",
+                    "LOG_LEVEL": "ERROR",
                     "LOG_ENABLED": True,
                 }
             )
