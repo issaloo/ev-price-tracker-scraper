@@ -5,8 +5,6 @@ from datetime import date
 import psycopg2
 import scrapy
 from dotenv import load_dotenv
-# from google.cloud import secretmanager
-# from google.oauth2 import service_account
 from itemadapter import ItemAdapter
 from scrapy.exceptions import DropItem
 
@@ -14,36 +12,21 @@ from scrapy.exceptions import DropItem
 # Set Up Environment Variables #
 ################################
 
+# Using .env, load DB variables
 load_dotenv()
-
 BASE_SQL_PATH = "scraper/sql"
 DB_HOSTNAME = os.getenv("DB_HOSTNAME")
 DB_USERNAME = os.getenv("DB_USERNAME")
 DB_DATABASE = os.getenv("DB_DATABASE")
 DB_PORT = os.getenv("DB_PORT")
 DB_PRICE_TABLE = os.getenv("DB_PRICE_TABLE")
-# GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID")
-# GCP_SECRET_ID = os.getenv("GCP_SECRET_ID")
-# GCP_VERSION_ID = os.getenv("GCP_VERSION_ID")
-# SECRET_NAME = f"projects/{GCP_PROJECT_ID}/secrets/{GCP_SECRET_ID}/versions/{GCP_VERSION_ID}"
 
 # Using GCF & SM, access secret through mounting as volume
-secret_location = '/postgres/secret'
-
+secret_location = "/postgres/secret"
 with open(secret_location) as f:
     secret_payload = f.readlines()[0]
 
-# # Get PostgresSQL secret payload
-# try:
-#     # TODO: replace this with secret manager instead since in cloud function?
-#     credentials = service_account.Credentials.from_service_account_file("scraper/ev-price-tracker-4100e7053913.json")
-#     client = secretmanager.SecretManagerServiceClient(credentials=credentials)
-#     response = client.access_secret_version(request={"name": SECRET_NAME})
-#     secret_payload = response.payload.data.decode("UTF-8")
-# except Exception as e:
-#     print(f"Error accessing secret: {e}")
-
-# Establish a connection to the PostgreSQL database
+# Establish a connection to the PostgreSQL DB
 try:
     connection = psycopg2.connect(
         host=DB_HOSTNAME,

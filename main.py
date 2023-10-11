@@ -5,15 +5,17 @@ from scrapy.utils.project import get_project_settings
 
 from scraper.spiders.tesla import TeslaSpider
 
-# TODO: here
+
 def run_ev_price_spider(event, context):
+    """Cloud Function entry point function."""
+
     def script(queue):
         try:
             settings = get_project_settings()
 
             settings.setdict(
                 {
-                    "LOG_LEVEL": "ERROR",
+                    "LOG_LEVEL": "INFO",
                     "LOG_ENABLED": True,
                 }
             )
@@ -27,12 +29,12 @@ def run_ev_price_spider(event, context):
 
     queue = Queue()
 
-    # wrap the spider in a child process
+    # Wrap the spider in a child process
     main_process = Process(target=script, args=(queue,))
-    main_process.start()  # start the process
-    main_process.join()  # block until the spider finishes
+    main_process.start()
+    main_process.join()
 
-    result = queue.get()  # check the process did not return an error
+    result = queue.get()
     if result is not None:
         raise result
     return "ok"
