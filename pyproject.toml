@@ -1,15 +1,21 @@
 [project]
-name = "standard-code-quality-workflow"
+name = "ev-price-tracker-scraper"
 version = "0.0.1"
-description = "Current standardized code quality workflow for Python with example file."
+description = "EV Price Tracker scraper to run at a daily frequency"
 authors = [
     { name = "Issac Loo", email = "issaloo@umich.edu" },
 ]
 
-requires-python = ">=3.9,<3.11"
+requires-python = ">=3.11,<3.12"
 license = { text = "All Rights Reserved" }
 dependencies = [
-    "pandas>=1.5.3",
+    "scrapy>=2.11.0",
+    "lxml>=4.9.3",
+    "psycopg2>=2.9.9",
+    "google-cloud>=0.34.0",
+    "google-cloud-secret-manager>=2.16.4",
+    "python-dotenv>=1.0.0",
+    "python-dateutil>=2.8.2",
 ]
 
 [project.optional-dependencies]
@@ -44,6 +50,7 @@ ignore = [
     "C901", # complex-structure
     "D100", # undocumented-public-module
     "D104", # undocumented-public-package
+    "D205", # blank-line-after-summary
     "D211", # blank-line-before-class
     "D212", # multi-line-summary-first-line
     "D213", # multi-line-summary-second-line
