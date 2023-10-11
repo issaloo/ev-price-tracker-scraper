@@ -5,7 +5,7 @@ from scrapy.utils.project import get_project_settings
 
 from scraper.spiders.tesla import TeslaSpider
 
-
+# TODO: here
 def run_ev_price_spider(event, context):
     def script(queue):
         try:
@@ -35,5 +35,4 @@ def run_ev_price_spider(event, context):
     result = queue.get()  # check the process did not return an error
     if result is not None:
         raise result
-
     return "ok"
