@@ -26,6 +26,8 @@ DB_PRICE_TABLE = os.getenv("DB_PRICE_TABLE")
 # GCP_SECRET_ID = os.getenv("GCP_SECRET_ID")
 # GCP_VERSION_ID = os.getenv("GCP_VERSION_ID")
 # SECRET_NAME = f"projects/{GCP_PROJECT_ID}/secrets/{GCP_SECRET_ID}/versions/{GCP_VERSION_ID}"
+
+# Using GCF & SM, access secret through mounting as volume
 secret_location = '/postgres/secret'
 
 with open(secret_location) as f:
