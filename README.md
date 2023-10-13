@@ -4,6 +4,17 @@
 This repo contains code to create and add to an EV Price tracking table in PostgreSQL DB. The code is triggered to run daily for regular updates.
 
 ## Technologies
+- Secret Manager (GCP)
+   - Store secrets
+- Cloud Source Repositories (GCP)
+   - Mirroring this repository for cloud function
+- Cloud Function (GCP)
+   - Execute code using serverless compute
+- Cloud Scheduler
+   - Schedule execution of code
+- PostgreSQL
+   - Long term data retention for historical data
+
 
 ## Contributing
 
