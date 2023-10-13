@@ -1,5 +1,10 @@
 # EV Price Tracker - Scraper
 
+## Overview
+This repo contains code to create and add to an EV Price tracking table in PostgreSQL DB. The code is triggered to run daily for regular updates.
+
+## Technologies
+
 ## Contributing
 
 ### General Guidelines
