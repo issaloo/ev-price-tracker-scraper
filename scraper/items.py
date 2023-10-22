@@ -19,6 +19,7 @@ class EvItem(Item):
     ev_id = Field()
     brand_name = Field()
     model_name = Field()
+    model_url = Field()
     car_type = Field()
     image_src = Field()
     msrp = Field()
