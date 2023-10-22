@@ -11,7 +11,7 @@ VALUES (
     '$$ev_id$$',
     '$$brand_name$$', 
     '$$model_name$$',
-    '$$model_url$$' 
+    '$$model_url$$',
     '$$car_type$$', 
     '$$image_src$$', 
     $$msrp$$, 
