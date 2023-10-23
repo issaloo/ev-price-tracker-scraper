@@ -15,6 +15,14 @@ This repo contains code to create and add to an EV Price tracking table in Postg
 - PostgreSQL
    - Long term data retention for historical data
 
+## Running PostGreSQL DB Locally
+
+To work with DB on your local machine:
+
+1. Given that you auth'd into flyctl, connect to DB
+```shell
+fly postgres connect -a evpricetrackerdb
+```
 
 ## Contributing
 
