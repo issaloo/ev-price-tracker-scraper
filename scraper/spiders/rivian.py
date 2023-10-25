@@ -89,7 +89,7 @@ class RivianSpider(scrapy.Spider):
         """
         xpath_dollar_str = (
             f'(//div[contains(translate(@data-section-gtm, "{self.uc}", "{self.lc}"), "starting price")]//'
-            f'h5[contains(translate(., "$")/text())[last()]'
+            'h5[contains(., "$")]/text())[last()]'
         )
         text_list = response.xpath(xpath_dollar_str).getall()
         price = [text.replace(",", "") for text in text_list if "$" in text][0]
@@ -110,5 +110,8 @@ class RivianSpider(scrapy.Spider):
         -------
             str or None: The extracted image source URL as a string or None if not found.
         """
-        xpath_img_str = "(//picture/source/@srcset)[1]"
-        return response.xpath(xpath_img_str).get()
+        xpath_img_str = (
+            f'(//img[contains(@src, "{model_name.upper()}") ' 'and contains(@src, "f_auto,q_auto")]/@src)[1]'
+        )
+        img_src = response.xpath(xpath_img_str).getall()[0]
+        return img_src
