@@ -18,7 +18,7 @@ class RivianSpider(scrapy.Spider):
         ----------
             lc (str): A string containing lowercase alphabetic characters 'abcdefghijklmnopqrstuvwxyz' for xpath translate
             uc (str): A string containing uppercase alphabetic characters 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' for xpath translate
-            base_url (str): The base URL for Tesla's website.
+            base_url (str): The base URL for Rivian's website.
         """
         self.lc = "abcdefghijklmnopqrstuvwxyz"
         self.uc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -28,7 +28,7 @@ class RivianSpider(scrapy.Spider):
         """
         Generate initial requests for scraping Rivian's electric vehicle information.
 
-        This method prepares and yields a series of Scrapy requests to fetch data for Tesla electric vehicle models.
+        This method prepares and yields a series of Scrapy requests to fetch data for Rivian electric vehicle models.
 
         Returns
         -------
