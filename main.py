@@ -3,6 +3,7 @@ from multiprocessing import Process, Queue
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 
+from scraper.spiders.rivian import RivianSpider
 from scraper.spiders.tesla import TeslaSpider
 
 
@@ -22,6 +23,7 @@ def run_ev_price_spider(event, context):
 
             process = CrawlerProcess(settings)
             process.crawl(TeslaSpider)
+            process.crawl(RivianSpider)
             process.start()
             queue.put(None)
         except Exception as e:
