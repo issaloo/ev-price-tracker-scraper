@@ -109,6 +109,7 @@ deactivate
 To work with DB on your local machine:
 
 1. Given that you auth'd into flyctl, connect to DB
+
 ```shell
 fly postgres connect -a evpricetrackerdb
 ```
@@ -116,8 +117,11 @@ fly postgres connect -a evpricetrackerdb
 ## Backfilling Data
 
 1. Open backfill script located at `backfill/main.py`
+   
 2. Fill in STATIC Values and DATES & PRICES
+   
 3. At the root directory, run the script
+
 ```
 python backfill/main.py
 ```
