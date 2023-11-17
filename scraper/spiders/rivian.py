@@ -110,8 +110,6 @@ class RivianSpider(scrapy.Spider):
         -------
             str or None: The extracted image source URL as a string or None if not found.
         """
-        xpath_img_str = (
-            f'(//img[contains(@src, "{model_name.upper()}") ' 'and contains(@src, "f_auto,q_auto")]/@src)[1]'
-        )
+        xpath_img_str = f'(//img[contains(@src, "{model_name.upper()}") and contains(@src, "f_auto,q_auto")]/@src)[1]'
         img_src = response.xpath(xpath_img_str).getall()[0]
         return img_src
