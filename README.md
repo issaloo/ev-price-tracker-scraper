@@ -15,15 +15,6 @@ This repo contains code to create and add to an EV Price tracking table in Postg
 - PostgreSQL
    - Long term data retention for historical data
 
-## Running PostGreSQL DB Locally
-
-To work with DB on your local machine:
-
-1. Given that you auth'd into flyctl, connect to DB
-```shell
-fly postgres connect -a evpricetrackerdb
-```
-
 ## Contributing
 
 ### General Guidelines
@@ -112,3 +103,21 @@ deactivate
    - :white_check_mark: You should get automatic fixes to poorly formatted python files with some errors
 
    > :information_source:  Ctrl+C to exit commit template
+
+## Running PostGreSQL DB Locally
+
+To work with DB on your local machine:
+
+1. Given that you auth'd into flyctl, connect to DB
+```shell
+fly postgres connect -a evpricetrackerdb
+```
+
+## Backfilling Data
+
+1. Open backfill script located at `backfill/main.py`
+2. Fill in STATIC Values and DATES & PRICES
+3. At the root directory, run the script
+```
+python backfill/main.py
+```
